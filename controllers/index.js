@@ -28,7 +28,6 @@ const getRandomUser = async (io) => {
 }
 
 module.exports = (io, socket) => {
-    //socket.on(validation)
     socket.on("login", async (data, callback) => {
         const {password, email} = data;
         const user = await User.findOne({email}).lean()
@@ -40,8 +39,8 @@ module.exports = (io, socket) => {
         if(!passwordValidation)
             throw Error("email or password are not valid");
         delete user.password;
-        user.socketId = user
-        socket.context.userToken = jwt.sign(user, config.secret)
+        user.socketId = socket.id;
+        socket.context.userToken = jwt.sign(user, config.secret);
         callback({status: true});
 
     })
@@ -54,6 +53,7 @@ module.exports = (io, socket) => {
         data.password = bcrypt.hashSync(password, salt);
         const newUser = await User.create(data);
         delete newUser.password;
+        user.socketId = socket.id;
         socket.context.userToken = jwt.sign(newUser.toObject(), config.secret)
         callback({status: true});
     })
